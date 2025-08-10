@@ -8,7 +8,15 @@ import MessageBubble from '@/components/MessageBubble';
 import AdModal from '@/components/AdModal';
 import FavorabilityMeter from '@/components/FavorabilityMeter';
 import DailyTasks from '@/components/DailyTasks';
-import { Send, Menu } from 'lucide-react';
+import NotificationCenter from '@/components/NotificationCenter';
+import UserProfile from '@/components/UserProfile';
+import ShareModal from '@/components/ShareModal';
+import VoiceRecorder from '@/components/VoiceRecorder';
+import { FloatingActionButton } from '@/components/ui/floating-action-button';
+import { AnimatedBackground } from '@/components/ui/animated-background';
+import { Send, Menu, Sparkles, Heart } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 interface Message {
   id: string;
@@ -38,6 +46,10 @@ const ChatPage = () => {
   const [pendingImageMessage, setPendingImageMessage] = useState<string | null>(null);
   const [contextTopic, setContextTopic] = useState<string>('');
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(2);
   const [customTextPrompt, setCustomTextPrompt] = useState('');
   const [customImagePrompt, setCustomImagePrompt] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -67,6 +79,15 @@ const ChatPage = () => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const triggerHaptic = async () => {
+    try {
+      await Haptics.impact({ style: ImpactStyle.Light });
+    } catch (error) {
+      // Haptics not available on this platform
+      console.log('Haptics not available');
+    }
   };
 
   const loadUserProfile = async () => {
@@ -156,6 +177,7 @@ const ChatPage = () => {
   const sendMessage = async () => {
     if (!inputMessage.trim() || loading) return;
 
+    triggerHaptic();
     setLoading(true);
     const messageText = inputMessage;
     setInputMessage('');
@@ -232,6 +254,10 @@ const ChatPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleVoiceMessage = (text: string) => {
+    setInputMessage(text);
   };
 
   const handleImageUnlock = async (messageId: string) => {
@@ -327,18 +353,39 @@ const ChatPage = () => {
     }
   };
 
+  const handleProfileUpdate = (updatedProfile: any) => {
+    setUserProfile(updatedProfile);
+  };
+
+  const handleNotificationClick = () => {
+    setShowNotifications(true);
+    setUnreadNotifications(0);
+  };
+
   if (!userProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-pink-900 to-purple-900">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pink-400"></div>
-      </div>
+      <AnimatedBackground>
+        <div className="min-h-screen flex items-center justify-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="rounded-full h-32 w-32 border-b-2 border-pink-400"
+          />
+        </div>
+      </AnimatedBackground>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-purple-900 via-pink-900 to-purple-900">
+    <AnimatedBackground>
+      <div className="flex h-screen">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-80 bg-black/30 backdrop-blur-xl transform ${showSidebar ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 lg:relative lg:translate-x-0 border-r border-white/10`}>
+      <motion.div 
+        initial={{ x: -320 }}
+        animate={{ x: showSidebar ? 0 : -320 }}
+        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+        className="fixed inset-y-0 left-0 z-50 w-80 bg-black/30 backdrop-blur-xl lg:relative lg:translate-x-0 border-r border-white/10"
+      >
         <div className="p-4 h-full flex flex-col">
           <FavorabilityMeter 
             score={userProfile.favorability_score} 
@@ -355,7 +402,7 @@ const ChatPage = () => {
             Sign Out
           </Button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
@@ -364,29 +411,44 @@ const ChatPage = () => {
           girlfriendId={userProfile.selected_girlfriend_id}
           onMenuClick={() => setShowSidebar(!showSidebar)}
           onSettingsChange={handleSettingsChange}
+          onNotificationClick={handleNotificationClick}
+          onProfileClick={() => setShowProfile(true)}
+          onShareClick={() => setShowShare(true)}
+          unreadNotifications={unreadNotifications}
         />
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((message) => (
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 relative">
+          <AnimatePresence>
+            {messages.map((message, index) => (
             <MessageBubble
               key={message.id}
               message={message}
+              index={index}
               onImageUnlock={() => handleImageUnlock(message.id)}
             />
-          ))}
+            ))}
+          </AnimatePresence>
           <div ref={messagesEndRef} />
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-white/10 bg-black/10 backdrop-blur-sm">
-          <div className="flex gap-2">
+        <motion.div 
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="p-4 border-t border-white/10 bg-black/10 backdrop-blur-sm"
+        >
+          <div className="flex gap-2 items-end">
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type something sweet..."
               onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
               className="bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder:text-purple-200"
+              disabled={loading}
+            />
+            <VoiceRecorder 
+              onVoiceMessage={handleVoiceMessage}
               disabled={loading}
             />
             <Button
@@ -397,8 +459,15 @@ const ChatPage = () => {
               <Send className="h-4 w-4" />
             </Button>
           </div>
-        </div>
+        </motion.div>
       </div>
+
+      {/* Floating Action Button */}
+      <FloatingActionButton
+        onClick={() => setShowShare(true)}
+        icon={<Sparkles className="h-6 w-6" />}
+        className="lg:hidden"
+      />
 
       {/* Ad Modal */}
       <AdModal
@@ -407,14 +476,41 @@ const ChatPage = () => {
         onComplete={handleAdComplete}
       />
 
+      {/* Notification Center */}
+      <NotificationCenter
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+      />
+
+      {/* User Profile */}
+      <UserProfile
+        isOpen={showProfile}
+        onClose={() => setShowProfile(false)}
+        userProfile={userProfile}
+        onProfileUpdate={handleProfileUpdate}
+      />
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={showShare}
+        onClose={() => setShowShare(false)}
+        userProfile={userProfile}
+      />
+
       {/* Mobile overlay */}
-      {showSidebar && (
-        <div 
+      <AnimatePresence>
+        {showSidebar && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setShowSidebar(false)}
-        />
-      )}
-    </div>
+          />
+        )}
+      </AnimatePresence>
+      </div>
+    </AnimatedBackground>
   );
 };
 

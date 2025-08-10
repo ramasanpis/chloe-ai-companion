@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { Heart, Sparkles } from 'lucide-react';
+import { AnimatedBackground } from '@/components/ui/animated-background';
+import { motion } from 'framer-motion';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -88,19 +90,35 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
+    <AnimatedBackground>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-md space-y-8"
+        >
         <div className="text-center">
-          <div className="flex justify-center mb-4">
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring" }}
+            className="flex justify-center mb-4"
+          >
             <div className="p-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full">
               <Heart className="h-8 w-8 text-white" />
             </div>
-          </div>
+          </motion.div>
           <h1 className="text-4xl font-bold text-white mb-2">AI Companion</h1>
           <p className="text-purple-200">Your perfect digital relationship awaits</p>
         </div>
 
-        <Card className="backdrop-blur-lg bg-white/10 border-white/20">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card className="backdrop-blur-lg bg-white/10 border-white/20">
           <CardHeader className="text-center">
             <CardTitle className="text-white flex items-center justify-center gap-2">
               <Sparkles className="h-5 w-5 text-pink-400" />
@@ -159,8 +177,10 @@ const AuthPage = () => {
             </CardFooter>
           </form>
         </Card>
+        </motion.div>
+        </motion.div>
       </div>
-    </div>
+    </AnimatedBackground>
   );
 };
 

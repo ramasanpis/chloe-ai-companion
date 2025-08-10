@@ -1,13 +1,19 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu, Heart } from 'lucide-react';
+import { Menu, Heart, Bell, User, Share2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import Settings from './Settings';
+import { motion } from 'framer-motion';
 
 interface ChatHeaderProps {
   girlfriendId: string;
   onMenuClick: () => void;
   onSettingsChange: (settings: { textPrompt: string; imagePrompt: string }) => void;
+  onNotificationClick: () => void;
+  onProfileClick: () => void;
+  onShareClick: () => void;
+  unreadNotifications?: number;
 }
 
 const girlfriendData: Record<string, { name: string; avatar: string }> = {
@@ -19,11 +25,23 @@ const girlfriendData: Record<string, { name: string; avatar: string }> = {
   ruby: { name: 'Ruby', avatar: '💎' }
 };
 
-const ChatHeader: React.FC<ChatHeaderProps> = ({ girlfriendId, onMenuClick, onSettingsChange }) => {
+const ChatHeader: React.FC<ChatHeaderProps> = ({ 
+  girlfriendId, 
+  onMenuClick, 
+  onSettingsChange,
+  onNotificationClick,
+  onProfileClick,
+  onShareClick,
+  unreadNotifications = 0
+}) => {
   const girlfriend = girlfriendData[girlfriendId] || { name: 'AI Companion', avatar: '💖' };
 
   return (
-    <header className="bg-black/20 backdrop-blur-xl border-b border-white/10 p-4">
+    <motion.header 
+      initial={{ y: -50, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      className="bg-black/20 backdrop-blur-xl border-b border-white/10 p-4"
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button
@@ -48,11 +66,42 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ girlfriendId, onMenuClick, onSe
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onShareClick}
+            className="text-white hover:bg-white/10 relative"
+          >
+            <Share2 className="h-5 w-5" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onNotificationClick}
+            className="text-white hover:bg-white/10 relative"
+          >
+            <Bell className="h-5 w-5" />
+            {unreadNotifications > 0 && (
+              <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-pink-500 text-white text-xs flex items-center justify-center">
+                {unreadNotifications}
+              </Badge>
+            )}
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onProfileClick}
+            className="text-white hover:bg-white/10"
+          >
+            <User className="h-5 w-5" />
+          </Button>
+          
           <Settings onSave={onSettingsChange} />
-          <Heart className="h-5 w-5 text-pink-400" />
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 };
 

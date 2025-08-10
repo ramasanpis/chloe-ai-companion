@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:android": "vite build && npx cap copy android && npx cap open android",
+    "android:dev": "vite build --mode development && npx cap copy android && npx cap run android",
     "lint": "eslint .",
     "preview": "vite preview"
   },

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Lock, Image as ImageIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface Message {
   id: string;
@@ -17,13 +18,19 @@ interface Message {
 interface MessageBubbleProps {
   message: Message;
   onImageUnlock: () => void;
+  index?: number;
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onImageUnlock }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onImageUnlock, index = 0 }) => {
   const isUser = message.is_user;
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+      className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+    >
       <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl backdrop-blur-sm ${
         isUser 
           ? 'bg-gradient-to-r from-pink-500/80 to-purple-600/80 text-white border border-white/20' 
@@ -62,7 +69,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onImageUnlock })
           {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { Sparkles, Heart, Zap } from 'lucide-react';
+import { AnimatedBackground } from '@/components/ui/animated-background';
+import { motion } from 'framer-motion';
 
 interface GirlfriendProfile {
   id: string;
@@ -106,9 +108,14 @@ const ProfilePicker: React.FC<ProfilePickerProps> = ({ onProfileSelected }) => {
   };
 
   return (
-    <div className="min-h-screen p-4 overflow-y-auto">
+    <AnimatedBackground>
+      <div className="min-h-screen p-4 overflow-y-auto">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
           <div className="flex justify-center mb-4">
             <div className="p-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full">
               <Sparkles className="h-8 w-8 text-white" />
@@ -116,17 +123,24 @@ const ProfilePicker: React.FC<ProfilePickerProps> = ({ onProfileSelected }) => {
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Choose Your Companion</h1>
           <p className="text-purple-200 text-lg">Select the AI girlfriend that speaks to your heart</p>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {girlfriendProfiles.map((profile) => (
-            <Card
+            <motion.div
               key={profile.id}
-              className={`cursor-pointer transition-all duration-300 backdrop-blur-lg bg-white/10 border-white/20 hover:bg-white/20 hover:scale-105 ${
-                selectedProfile === profile.id ? 'ring-2 ring-pink-400 bg-white/20' : ''
-              }`}
-              onClick={() => setSelectedProfile(profile.id)}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
+              <Card
+                className={`cursor-pointer transition-all duration-300 backdrop-blur-lg bg-white/10 border-white/20 hover:bg-white/20 ${
+                  selectedProfile === profile.id ? 'ring-2 ring-pink-400 bg-white/20' : ''
+                }`}
+                onClick={() => setSelectedProfile(profile.id)}
+              >
               <CardHeader className="text-center">
                 <div className={`text-6xl mb-4 p-4 rounded-full bg-gradient-to-r ${profile.theme} w-fit mx-auto`}>
                   {profile.avatar}
@@ -152,10 +166,12 @@ const ProfilePicker: React.FC<ProfilePickerProps> = ({ onProfileSelected }) => {
                 )}
               </CardContent>
             </Card>
+            </motion.div>
           ))}
         </div>
       </div>
-    </div>
+      </div>
+    </AnimatedBackground>
   );
 };
 
