@@ -9,7 +9,7 @@ import MessageBubble from '@/components/MessageBubble';
 import AdModal from '@/components/AdModal';
 import FavorabilityMeter from '@/components/FavorabilityMeter';
 import DailyTasks from '@/components/DailyTasks';
-import { Send, Image, Menu } from 'lucide-react';
+import { Send, Menu } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -92,42 +92,46 @@ const ChatPage = () => {
   };
 
   const generateAIResponse = async (userMessage: string): Promise<{ text: string; hasImage?: boolean; imageContext?: string }> => {
-    // Simulate AI response - in a real app, you'd call an AI API here
-    const responses = [
-      "That's so sweet of you to say! 💖",
-      "I love chatting with you! What's on your mind?",
-      "You always know how to make me smile! ✨",
-      "I've been thinking about you too! 😊",
-      "Tell me more about your day!",
-      "You're such good company! 💕"
-    ];
+    try {
+      // Check if user is asking for an image
+      const imageKeywords = ['pic', 'picture', 'photo', 'image', 'show me', 'selfie', 'send'];
+      const hasImageRequest = imageKeywords.some(keyword => 
+        userMessage.toLowerCase().includes(keyword)
+      );
 
-    // Check if user is asking for an image
-    const imageKeywords = ['pic', 'picture', 'photo', 'image', 'show me', 'selfie'];
-    const hasImageRequest = imageKeywords.some(keyword => 
-      userMessage.toLowerCase().includes(keyword)
-    );
+      if (hasImageRequest) {
+        // Extract context or use previous context
+        let imageContext = contextTopic;
+        if (userMessage.toLowerCase().includes('beach')) imageContext = 'beach';
+        else if (userMessage.toLowerCase().includes('cute')) imageContext = 'cute';
+        else if (userMessage.toLowerCase().includes('dress')) imageContext = 'dress';
+        else if (!imageContext) imageContext = 'portrait';
 
-    if (hasImageRequest) {
-      // Extract context or use previous context
-      let imageContext = contextTopic;
-      if (userMessage.toLowerCase().includes('beach')) imageContext = 'beach';
-      else if (userMessage.toLowerCase().includes('cute')) imageContext = 'cute';
-      else if (userMessage.toLowerCase().includes('dress')) imageContext = 'dress';
-      else if (!imageContext) imageContext = 'portrait';
+        setContextTopic(imageContext);
 
-      setContextTopic(imageContext);
+        return {
+          text: "I'd love to share a photo with you! 📸✨ Just watch this quick ad to unlock it 💕",
+          hasImage: true,
+          imageContext
+        };
+      }
+
+      // Generate text response using our edge function
+      const { data, error } = await supabase.functions.invoke('generate-text', {
+        body: { prompt: userMessage }
+      });
+
+      if (error) throw error;
 
       return {
-        text: "I'd love to share a photo with you! 📸✨",
-        hasImage: true,
-        imageContext
+        text: data.message || "Sorry babe, I'm having trouble thinking right now 💕"
+      };
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      return {
+        text: "Oops! Something went wrong, but I still love you! 💖"
       };
     }
-
-    return {
-      text: responses[Math.floor(Math.random() * responses.length)]
-    };
   };
 
   const sendMessage = async () => {
@@ -176,15 +180,28 @@ const ChatPage = () => {
 
       setMessages(prev => [...prev, aiMessageData]);
 
-      // Update daily messages count
+      // Update daily messages count and favorability
       if (userProfile) {
         const newCount = userProfile.daily_messages_sent + 1;
+        const favorabilityBonus = Math.floor(newCount / 5); // Bonus every 5 messages
+        const newScore = userProfile.favorability_score + 1 + favorabilityBonus;
+        const newLevel = Math.floor(newScore / 100) + 1;
+
         await supabase
           .from('user_profiles')
-          .update({ daily_messages_sent: newCount })
+          .update({ 
+            daily_messages_sent: newCount,
+            favorability_score: newScore,
+            level: newLevel
+          })
           .eq('id', user.id);
 
-        setUserProfile({ ...userProfile, daily_messages_sent: newCount });
+        setUserProfile({ 
+          ...userProfile, 
+          daily_messages_sent: newCount,
+          favorability_score: newScore,
+          level: newLevel
+        });
       }
 
     } catch (error: any) {
@@ -210,8 +227,21 @@ const ChatPage = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Generate image URL (in a real app, you'd call an AI image API)
-      const imageUrl = `https://picsum.photos/400/600?random=${Date.now()}`;
+      // Get the message to find the context
+      const message = messages.find(m => m.id === pendingImageMessage);
+      const context = message?.context_topic || 'portrait';
+
+      // Generate image using our edge function
+      const { data, error } = await supabase.functions.invoke('generate-image', {
+        body: { 
+          prompt: `Beautiful anime girlfriend`,
+          context: context
+        }
+      });
+
+      if (error) throw error;
+
+      const imageUrl = data.imageUrl;
 
       // Update message with unlocked image
       await supabase
@@ -222,8 +252,8 @@ const ChatPage = () => {
         })
         .eq('id', pendingImageMessage);
 
-      // Update favorability score
-      const newScore = (userProfile?.favorability_score || 0) + 10;
+      // Update favorability score (bonus for unlocking images)
+      const newScore = (userProfile?.favorability_score || 0) + 15;
       const newLevel = Math.floor(newScore / 100) + 1;
 
       await supabase
@@ -247,7 +277,7 @@ const ChatPage = () => {
 
       toast({
         title: "Image Unlocked!",
-        description: "You gained 10 favorability points! 💖",
+        description: "You gained 15 favorability points! 💖",
       });
 
     } catch (error: any) {
@@ -331,9 +361,10 @@ const ChatPage = () => {
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Type your message..."
+              placeholder="Type something sweet..."
               onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
               className="bg-white/10 border-white/20 text-white placeholder:text-purple-200"
+              disabled={loading}
             />
             <Button
               onClick={sendMessage}
