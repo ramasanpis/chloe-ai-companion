@@ -14,7 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          context_topic: string | null
+          created_at: string | null
+          has_image: boolean | null
+          id: string
+          image_unlocked: boolean | null
+          image_url: string | null
+          is_user: boolean
+          message: string
+          user_id: string | null
+        }
+        Insert: {
+          context_topic?: string | null
+          created_at?: string | null
+          has_image?: boolean | null
+          id?: string
+          image_unlocked?: boolean | null
+          image_url?: string | null
+          is_user: boolean
+          message: string
+          user_id?: string | null
+        }
+        Update: {
+          context_topic?: string | null
+          created_at?: string | null
+          has_image?: boolean | null
+          id?: string
+          image_unlocked?: boolean | null
+          image_url?: string | null
+          is_user?: boolean
+          message?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      daily_tasks: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          id: string
+          task_date: string | null
+          task_type: string
+          user_id: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          id?: string
+          task_date?: string | null
+          task_type: string
+          user_id?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          id?: string
+          task_date?: string | null
+          task_type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          created_at: string | null
+          daily_messages_sent: number | null
+          favorability_score: number | null
+          id: string
+          last_active: string | null
+          level: number | null
+          selected_girlfriend_id: string | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          daily_messages_sent?: number | null
+          favorability_score?: number | null
+          id: string
+          last_active?: string | null
+          level?: number | null
+          selected_girlfriend_id?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          daily_messages_sent?: number | null
+          favorability_score?: number | null
+          id?: string
+          last_active?: string | null
+          level?: number | null
+          selected_girlfriend_id?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
