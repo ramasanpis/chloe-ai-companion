@@ -1,94 +1,96 @@
 
 import React from 'react';
-import { CheckCircle, Circle, MessageCircle, Image, Coffee } from 'lucide-react';
+import { CheckCircle, Circle, MessageSquare, Image, Clock } from 'lucide-react';
 
 interface DailyTasksProps {
   messagesSent: number;
 }
 
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  completed: boolean;
-  icon: React.ReactNode;
-  reward: string;
-}
-
 const DailyTasks: React.FC<DailyTasksProps> = ({ messagesSent }) => {
-  const tasks: Task[] = [
+  const tasks = [
     {
       id: 'messages',
-      title: 'Send 3 Messages',
-      description: 'Chat with your companion',
-      completed: messagesSent >= 3,
-      icon: <MessageCircle className="h-4 w-4" />,
-      reward: '+5 points'
+      title: 'Send 5 Messages',
+      description: '+5 Favorability',
+      progress: Math.min(messagesSent, 5),
+      total: 5,
+      completed: messagesSent >= 5,
+      icon: MessageSquare
     },
     {
-      id: 'image',
-      title: 'Unlock an Image',
-      description: 'Watch an ad to unlock content',
-      completed: false, // This would be tracked in real implementation
-      icon: <Image className="h-4 w-4" />,
-      reward: '+10 points'
+      id: 'unlock',
+      title: 'Unlock 1 Image',
+      description: '+15 Favorability',
+      progress: 0, // This would need to be tracked separately
+      total: 1,
+      completed: false,
+      icon: Image
     },
     {
       id: 'session',
-      title: 'Chat for 5 minutes',
-      description: 'Have a meaningful conversation',
-      completed: false, // This would be tracked in real implementation
-      icon: <Coffee className="h-4 w-4" />,
-      reward: '+3 points'
+      title: 'Chat for 10 minutes',
+      description: '+10 Favorability',
+      progress: 0, // This would need to be tracked separately
+      total: 1,
+      completed: false,
+      icon: Clock
     }
   ];
 
-  const completedTasks = tasks.filter(task => task.completed).length;
-
   return (
-    <div className="bg-white/10 backdrop-blur-lg rounded-lg p-4 border border-white/20">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-white font-semibold">Daily Tasks</h3>
-        <span className="text-purple-200 text-sm">{completedTasks}/{tasks.length}</span>
-      </div>
-
+    <div className="bg-white/10 backdrop-blur-xl rounded-lg p-4 border border-white/20">
+      <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+        <Clock className="h-4 w-4" />
+        Daily Tasks
+      </h3>
+      
       <div className="space-y-3">
-        {tasks.map((task) => (
-          <div 
-            key={task.id}
-            className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
-              task.completed 
-                ? 'bg-green-500/20 border border-green-500/30' 
-                : 'bg-white/5 border border-white/10'
-            }`}
-          >
-            <div className={`mt-0.5 ${task.completed ? 'text-green-400' : 'text-purple-300'}`}>
-              {task.completed ? <CheckCircle className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <div className={task.completed ? 'text-green-400' : 'text-purple-300'}>
-                  {task.icon}
-                </div>
-                <h4 className={`font-medium text-sm ${task.completed ? 'text-green-300' : 'text-white'}`}>
-                  {task.title}
-                </h4>
+        {tasks.map((task) => {
+          const IconComponent = task.icon;
+          const progressPercentage = (task.progress / task.total) * 100;
+          
+          return (
+            <div key={task.id} className="flex items-center gap-3 p-3 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">
+              <div className="flex-shrink-0">
+                {task.completed ? (
+                  <CheckCircle className="h-5 w-5 text-green-400" />
+                ) : (
+                  <Circle className="h-5 w-5 text-white/50" />
+                )}
               </div>
-              <p className="text-purple-200 text-xs">{task.description}</p>
-              <span className="text-pink-300 text-xs font-medium">{task.reward}</span>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <IconComponent className="h-4 w-4 text-white/70" />
+                  <p className="text-sm font-medium text-white truncate">
+                    {task.title}
+                  </p>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-green-400">{task.description}</p>
+                  <span className="text-xs text-white/70">
+                    {task.progress}/{task.total}
+                  </span>
+                </div>
+                
+                <div className="mt-2 bg-white/20 rounded-full h-1">
+                  <div 
+                    className="bg-gradient-to-r from-pink-400 to-purple-500 h-1 rounded-full transition-all duration-300"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-
-      {completedTasks === tasks.length && (
-        <div className="mt-4 p-3 bg-gradient-to-r from-pink-500/20 to-purple-600/20 rounded-lg border border-pink-400/30">
-          <p className="text-center text-pink-300 text-sm font-medium">
-            🎉 All tasks completed! Great job!
-          </p>
-        </div>
-      )}
+      
+      <div className="mt-4 text-center">
+        <p className="text-xs text-white/70">
+          Complete tasks to boost your relationship! 💕
+        </p>
+      </div>
     </div>
   );
 };

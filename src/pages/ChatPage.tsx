@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -39,17 +38,32 @@ const ChatPage = () => {
   const [pendingImageMessage, setPendingImageMessage] = useState<string | null>(null);
   const [contextTopic, setContextTopic] = useState<string>('');
   const [showSidebar, setShowSidebar] = useState(false);
+  const [customTextPrompt, setCustomTextPrompt] = useState('');
+  const [customImagePrompt, setCustomImagePrompt] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     loadUserProfile();
     loadMessages();
+    loadCustomPrompts();
   }, []);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const loadCustomPrompts = () => {
+    const savedTextPrompt = localStorage.getItem('customTextPrompt') || '';
+    const savedImagePrompt = localStorage.getItem('customImagePrompt') || '';
+    setCustomTextPrompt(savedTextPrompt);
+    setCustomImagePrompt(savedImagePrompt);
+  };
+
+  const handleSettingsChange = (settings: { textPrompt: string; imagePrompt: string }) => {
+    setCustomTextPrompt(settings.textPrompt);
+    setCustomImagePrompt(settings.imagePrompt);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -116,9 +130,14 @@ const ChatPage = () => {
         };
       }
 
-      // Generate text response using our edge function
+      // Generate text response using our edge function with custom prompt
+      const promptToUse = customTextPrompt || userMessage;
       const { data, error } = await supabase.functions.invoke('generate-text', {
-        body: { prompt: userMessage }
+        body: { 
+          prompt: customTextPrompt 
+            ? `${customTextPrompt}. User message: ${userMessage}`
+            : userMessage 
+        }
       });
 
       if (error) throw error;
@@ -231,10 +250,13 @@ const ChatPage = () => {
       const message = messages.find(m => m.id === pendingImageMessage);
       const context = message?.context_topic || 'portrait';
 
+      // Use custom image prompt if available
+      const basePrompt = customImagePrompt || 'Beautiful anime girlfriend';
+      
       // Generate image using our edge function
       const { data, error } = await supabase.functions.invoke('generate-image', {
         body: { 
-          prompt: `Beautiful anime girlfriend`,
+          prompt: basePrompt,
           context: context
         }
       });
@@ -307,16 +329,16 @@ const ChatPage = () => {
 
   if (!userProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-pink-900 to-purple-900">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pink-400"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-gradient-to-br from-purple-900 via-pink-900 to-purple-900">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-80 bg-black/30 backdrop-blur-lg transform ${showSidebar ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 lg:relative lg:translate-x-0`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-80 bg-black/30 backdrop-blur-xl transform ${showSidebar ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 lg:relative lg:translate-x-0 border-r border-white/10`}>
         <div className="p-4 h-full flex flex-col">
           <FavorabilityMeter 
             score={userProfile.favorability_score} 
@@ -328,7 +350,7 @@ const ChatPage = () => {
           <Button 
             onClick={handleSignOut}
             variant="outline"
-            className="mt-4 bg-white/10 border-white/20 text-white hover:bg-white/20"
+            className="mt-4 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
           >
             Sign Out
           </Button>
@@ -341,6 +363,7 @@ const ChatPage = () => {
         <ChatHeader 
           girlfriendId={userProfile.selected_girlfriend_id}
           onMenuClick={() => setShowSidebar(!showSidebar)}
+          onSettingsChange={handleSettingsChange}
         />
 
         {/* Messages */}
@@ -356,14 +379,14 @@ const ChatPage = () => {
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 bg-black/10 backdrop-blur-sm">
           <div className="flex gap-2">
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type something sweet..."
               onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-              className="bg-white/10 border-white/20 text-white placeholder:text-purple-200"
+              className="bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder:text-purple-200"
               disabled={loading}
             />
             <Button
@@ -387,7 +410,7 @@ const ChatPage = () => {
       {/* Mobile overlay */}
       {showSidebar && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setShowSidebar(false)}
         />
       )}

@@ -24,10 +24,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onImageUnlock })
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl backdrop-blur-sm ${
         isUser 
-          ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white' 
-          : 'bg-white/10 backdrop-blur-lg text-white border border-white/20'
+          ? 'bg-gradient-to-r from-pink-500/80 to-purple-600/80 text-white border border-white/20' 
+          : 'bg-white/15 backdrop-blur-xl text-white border border-white/20'
       }`}>
         <p className="text-sm">{message.message}</p>
         
@@ -37,17 +37,17 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onImageUnlock })
               <img 
                 src={message.image_url} 
                 alt="Unlocked content"
-                className="w-full h-48 object-cover rounded-lg"
+                className="w-full h-48 object-cover rounded-lg border border-white/20"
               />
             ) : (
-              <div className="relative w-full h-48 bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-lg flex items-center justify-center border border-white/20">
-                <div className="absolute inset-0 bg-black/50 rounded-lg backdrop-blur-sm flex flex-col items-center justify-center">
+              <div className="relative w-full h-48 bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-lg flex items-center justify-center border border-white/20 backdrop-blur-sm">
+                <div className="absolute inset-0 bg-black/50 rounded-lg backdrop-blur-xl flex flex-col items-center justify-center">
                   <Lock className="h-8 w-8 text-white mb-2" />
                   <p className="text-white text-sm mb-3 text-center">Image locked</p>
                   <Button
                     onClick={onImageUnlock}
                     size="sm"
-                    className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white"
+                    className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white backdrop-blur-sm"
                   >
                     <ImageIcon className="h-4 w-4 mr-2" />
                     Watch Ad to Unlock

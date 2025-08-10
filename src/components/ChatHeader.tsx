@@ -2,10 +2,12 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, Heart } from 'lucide-react';
+import Settings from './Settings';
 
 interface ChatHeaderProps {
   girlfriendId: string;
   onMenuClick: () => void;
+  onSettingsChange: (settings: { textPrompt: string; imagePrompt: string }) => void;
 }
 
 const girlfriendData: Record<string, { name: string; avatar: string }> = {
@@ -17,11 +19,11 @@ const girlfriendData: Record<string, { name: string; avatar: string }> = {
   ruby: { name: 'Ruby', avatar: '💎' }
 };
 
-const ChatHeader: React.FC<ChatHeaderProps> = ({ girlfriendId, onMenuClick }) => {
+const ChatHeader: React.FC<ChatHeaderProps> = ({ girlfriendId, onMenuClick, onSettingsChange }) => {
   const girlfriend = girlfriendData[girlfriendId] || { name: 'AI Companion', avatar: '💖' };
 
   return (
-    <header className="bg-black/20 backdrop-blur-lg border-b border-white/10 p-4">
+    <header className="bg-black/20 backdrop-blur-xl border-b border-white/10 p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button
@@ -46,6 +48,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ girlfriendId, onMenuClick }) =>
         </div>
 
         <div className="flex items-center gap-2">
+          <Settings onSave={onSettingsChange} />
           <Heart className="h-5 w-5 text-pink-400" />
         </div>
       </div>

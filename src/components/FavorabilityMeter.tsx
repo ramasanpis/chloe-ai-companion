@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Star, Crown } from 'lucide-react';
+import { Heart, Star } from 'lucide-react';
 
 interface FavorabilityMeterProps {
   score: number;
@@ -9,67 +9,42 @@ interface FavorabilityMeterProps {
 }
 
 const FavorabilityMeter: React.FC<FavorabilityMeterProps> = ({ score, level }) => {
-  const currentLevelScore = score % 100;
-  const progressPercentage = currentLevelScore;
-
-  const getLevelIcon = (level: number) => {
-    if (level >= 7) return <Crown className="h-5 w-5 text-yellow-400" />;
-    if (level >= 4) return <Star className="h-5 w-5 text-purple-400" />;
-    return <Heart className="h-5 w-5 text-pink-400" />;
-  };
-
-  const getLevelColor = (level: number) => {
-    if (level >= 7) return 'from-yellow-400 to-orange-500';
-    if (level >= 4) return 'from-purple-400 to-pink-500';
-    return 'from-pink-400 to-red-500';
-  };
+  const progressInLevel = score % 100;
+  const nextLevelScore = (level * 100);
 
   return (
-    <div className="bg-white/10 backdrop-blur-lg rounded-lg p-4 border border-white/20">
+    <div className="bg-white/10 backdrop-blur-xl rounded-lg p-4 border border-white/20">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-white font-semibold">Relationship</h3>
         <div className="flex items-center gap-2">
-          {getLevelIcon(level)}
-          <span className="text-white font-bold">LV{level}</span>
+          <Heart className="h-5 w-5 text-pink-400" />
+          <span className="text-white font-semibold">Level {level}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Star className="h-4 w-4 text-yellow-400" />
+          <span className="text-white text-sm">{score}</span>
         </div>
       </div>
-
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-purple-200">Favorability</span>
-          <span className="text-white">{score} pts</span>
-        </div>
-        
-        <div className="relative">
-          <Progress 
-            value={progressPercentage} 
-            className="h-3 bg-white/10"
-          />
-          <div 
-            className={`absolute inset-0 h-3 bg-gradient-to-r ${getLevelColor(level)} rounded-full transition-all duration-500`}
-            style={{ width: `${progressPercentage}%` }}
-          />
-        </div>
-
-        <div className="flex justify-between text-xs text-purple-200">
-          <span>{currentLevelScore}/100</span>
-          <span>Next: LV{level + 1}</span>
-        </div>
+      
+      <Progress 
+        value={progressInLevel} 
+        className="h-2 bg-white/20"
+      />
+      
+      <div className="flex justify-between text-xs text-white/70 mt-2">
+        <span>{progressInLevel}/100</span>
+        <span>Next: LV{level + 1}</span>
       </div>
-
-      <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
-        <div className="text-center">
-          <div className="text-white font-semibold">{Math.floor(score / 10)}</div>
-          <div className="text-purple-200">Images</div>
+      
+      <div className="mt-3 text-center">
+        <div className="text-2xl mb-1">
+          {level >= 5 ? '💖' : level >= 3 ? '💕' : '💗'}
         </div>
-        <div className="text-center">
-          <div className="text-white font-semibold">{level}</div>
-          <div className="text-purple-200">Level</div>
-        </div>
-        <div className="text-center">
-          <div className="text-white font-semibold">{score}</div>
-          <div className="text-purple-200">Score</div>
-        </div>
+        <p className="text-xs text-white/80">
+          {level >= 7 ? 'Deeply in love!' : 
+           level >= 5 ? 'Very close!' : 
+           level >= 3 ? 'Getting closer!' : 
+           'Building connection...'}
+        </p>
       </div>
     </div>
   );
