@@ -26,58 +26,69 @@ serve(async (req) => {
       enhancedPrompt = "beautiful anime girlfriend portrait, detailed face, charming smile, high quality"
     }
 
-    const response = await fetch('https://api.a4f.co/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ddc-a4f-f4ca021ad1a54bda8ab5ccbf457ddd62',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'provider-6/FLUX.1-kontext-max',
-        prompt: enhancedPrompt,
-        n: 1,
-        size: '512x512'
-      }),
-    })
+    console.log('Generating image with prompt:', enhancedPrompt)
 
-    const data = await response.json()
+    let imageUrl = null
     
-    // Fallback images if API fails
+    try {
+      const response = await fetch('https://api.a4f.co/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ddc-a4f-f4ca021ad1a54bda8ab5ccbf457ddd62',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'provider-6/FLUX.1-kontext-max',
+          prompt: enhancedPrompt,
+          n: 1,
+          size: '512x512'
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log('API response:', data)
+        
+        if (data.data && data.data[0]?.url) {
+          imageUrl = data.data[0].url
+          console.log('Generated image URL:', imageUrl)
+        }
+      } else {
+        console.error('API request failed:', response.status, await response.text())
+      }
+    } catch (apiError) {
+      console.error('API call failed:', apiError)
+    }
+    
+    // High-quality fallback images if API fails
     const fallbackImages = {
-      beach: "https://picsum.photos/400/600?random=beach",
-      cute: "https://picsum.photos/400/600?random=cute", 
-      dress: "https://picsum.photos/400/600?random=dress",
-      portrait: "https://picsum.photos/400/600?random=portrait",
-      default: "https://picsum.photos/400/600?random=girlfriend"
+      beach: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop&crop=face",
+      cute: "https://images.unsplash.com/photo-1494790108755-2616c27de2a2?w=400&h=600&fit=crop&crop=face", 
+      dress: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=600&fit=crop&crop=face",
+      portrait: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=600&fit=crop&crop=face",
+      default: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=600&fit=crop&crop=face"
     }
 
-    const imageUrl = (data.data && data.data[0]?.url) 
-      ? data.data[0].url 
-      : fallbackImages[context as keyof typeof fallbackImages] || fallbackImages.default
+    // Use API result or fallback
+    const finalImageUrl = imageUrl || fallbackImages[context as keyof typeof fallbackImages] || fallbackImages.default
+
+    console.log('Final image URL:', finalImageUrl)
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        imageUrl 
+        imageUrl: finalImageUrl 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
     console.error('Error:', error)
     
-    // Return fallback image on error
-    const fallbackImages = {
-      beach: "https://picsum.photos/400/600?random=beach",
-      cute: "https://picsum.photos/400/600?random=cute",
-      dress: "https://picsum.photos/400/600?random=dress", 
-      portrait: "https://picsum.photos/400/600?random=portrait",
-      default: "https://picsum.photos/400/600?random=girlfriend"
-    }
-
+    // Return a reliable fallback image on any error
     return new Response(
       JSON.stringify({ 
         success: true, 
-        imageUrl: fallbackImages.default
+        imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=600&fit=crop&crop=face"
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

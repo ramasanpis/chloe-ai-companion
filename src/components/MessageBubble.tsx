@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Lock, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -23,6 +23,19 @@ interface MessageBubbleProps {
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onImageUnlock, index = 0 }) => {
   const isUser = message.is_user;
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+
+  const handleImageLoad = () => {
+    setImageLoading(false);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    setImageLoading(false);
+    setImageError(true);
+    console.error('Failed to load image:', message.image_url);
+  };
 
   return (
     <motion.div 
@@ -40,12 +53,30 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onImageUnlock, i
         
         {message.has_image && (
           <div className="mt-2">
-            {message.image_unlocked && message.image_url ? (
-              <img 
-                src={message.image_url} 
-                alt="Unlocked content"
-                className="w-full h-48 object-cover rounded-lg border border-white/20"
-              />
+            {message.image_unlocked && message.image_url && !imageError ? (
+              <div className="relative">
+                {imageLoading && (
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-lg flex items-center justify-center border border-white/20 backdrop-blur-sm">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                  </div>
+                )}
+                <img 
+                  src={message.image_url} 
+                  alt="Generated content"
+                  className="w-full h-48 object-cover rounded-lg border border-white/20"
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
+                  style={{ display: imageLoading ? 'none' : 'block' }}
+                />
+                {imageError && (
+                  <div className="w-full h-48 bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-lg flex items-center justify-center border border-white/20 backdrop-blur-sm">
+                    <div className="text-center">
+                      <ImageIcon className="h-8 w-8 text-white/60 mx-auto mb-2" />
+                      <p className="text-white/60 text-sm">Image failed to load</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="relative w-full h-48 bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-lg flex items-center justify-center border border-white/20 backdrop-blur-sm">
                 <div className="absolute inset-0 bg-black/50 rounded-lg backdrop-blur-xl flex flex-col items-center justify-center">
