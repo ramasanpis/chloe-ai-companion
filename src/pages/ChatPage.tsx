@@ -52,6 +52,7 @@ const ChatPage = () => {
   const [unreadNotifications, setUnreadNotifications] = useState(2);
   const [customTextPrompt, setCustomTextPrompt] = useState('');
   const [customImagePrompt, setCustomImagePrompt] = useState('');
+  const [loadingError, setLoadingError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -92,8 +93,14 @@ const ChatPage = () => {
 
   const loadUserProfile = async () => {
     try {
+      console.log('Loading user profile...');
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      console.log('Current user:', user);
+      
+      if (!user) {
+        setLoadingError('No authenticated user found');
+        return;
+      }
 
       const { data, error } = await supabase
         .from('user_profiles')
@@ -101,10 +108,19 @@ const ChatPage = () => {
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      console.log('Profile data:', data);
+      console.log('Profile error:', error);
+
+      if (error) {
+        setLoadingError(`Profile load error: ${error.message}`);
+        throw error;
+      }
+      
       setUserProfile(data);
+      setLoadingError(null);
     } catch (error) {
       console.error('Error loading profile:', error);
+      setLoadingError(`Failed to load profile: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -362,15 +378,40 @@ const ChatPage = () => {
     setUnreadNotifications(0);
   };
 
+  if (loadingError) {
+    return (
+      <AnimatedBackground>
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 max-w-md text-center">
+            <h2 className="text-red-400 font-semibold mb-2">Loading Error</h2>
+            <p className="text-white/80 mb-4">{loadingError}</p>
+            <Button 
+              onClick={() => {
+                setLoadingError(null);
+                loadUserProfile();
+              }}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
+      </AnimatedBackground>
+    );
+  }
+
   if (!userProfile) {
     return (
       <AnimatedBackground>
         <div className="min-h-screen flex items-center justify-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="rounded-full h-32 w-32 border-b-2 border-pink-400"
-          />
+          <div className="text-center">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="rounded-full h-32 w-32 border-b-2 border-pink-400 mx-auto mb-4"
+            />
+            <p className="text-white/80">Loading your profile...</p>
+          </div>
         </div>
       </AnimatedBackground>
     );
