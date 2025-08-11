@@ -126,7 +126,7 @@ const ProfilePicker: React.FC<ProfilePickerProps> = ({ onProfileSelected }) => {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {girlfriendProfiles.map((profile) => (
+          {girlfriendProfiles.map((profile, index) => (
             <motion.div
               key={profile.id}
               initial={{ opacity: 0, y: 20 }}
